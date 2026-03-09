@@ -1,0 +1,35 @@
+{
+  "records": [
+    {
+      "caseId": "44066",
+      "action": "kick",
+      "userId": "2287083",
+      "username": "Lukegamer",
+      "adminDiscordId": "1401350534451167283",
+      "adminDiscordTag": "future1678",
+      "reason": "frp",
+      "timestamp": 1773009034264
+    },
+    {
+      "caseId": "54415",
+      "action": "note",
+      "userId": "2386420088",
+      "username": "Vurn_Ryft",
+      "adminDiscordId": "833457371165622272",
+      "adminDiscordTag": "valleydivision",
+      "reason": "change batteries in smoke detecter",
+      "timestamp": 1773011677875
+    },
+    {
+      "caseId": "56755",
+      "action": "warn",
+      "userId": "1772560048",
+      "username": "lukegamerloljk",
+      "adminDiscordId": "1401350534451167283",
+      "adminDiscordTag": "future1678",
+      "reason": "lukegamerloljk",
+      "timestamp": 1773012593381
+    }
+  ],
+  "bans": {}
+}
