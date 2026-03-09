@@ -328,7 +328,7 @@ function buildLogEmbed(action, payload) {
 
   if (action === "ban") {
     embed
-      .setTitle(`${payload.username} was banned successfully`)
+      .setTitle(`${payload.username} was banned`)
       .addFields(
         { name: "Admin", value: payload.admin, inline: true },
         { name: "Date", value: formatDate(payload.timestamp), inline: true },
@@ -338,7 +338,7 @@ function buildLogEmbed(action, payload) {
       );
   } else if (action === "unban") {
     embed
-      .setTitle(`${payload.username} was unbanned successfully`)
+      .setTitle(`${payload.username} was unbanned`)
       .addFields(
         { name: "Admin", value: payload.admin, inline: true },
         { name: "Date", value: formatDate(payload.timestamp), inline: true },
@@ -347,7 +347,7 @@ function buildLogEmbed(action, payload) {
       );
   } else if (action === "kick") {
     embed
-      .setTitle(`${payload.username} was kicked successfully`)
+      .setTitle(`${payload.username} was kicked`)
       .addFields(
         { name: "Admin", value: payload.admin, inline: true },
         { name: "Date", value: formatDate(payload.timestamp), inline: true },
@@ -356,7 +356,7 @@ function buildLogEmbed(action, payload) {
       );
   } else if (action === "warn") {
     embed
-      .setTitle(`${payload.username} was warned successfully`)
+      .setTitle(`${payload.username} was warned`)
       .addFields(
         { name: "Admin", value: payload.admin, inline: true },
         { name: "Date", value: formatDate(payload.timestamp), inline: true },
@@ -365,7 +365,7 @@ function buildLogEmbed(action, payload) {
       );
   } else if (action === "note") {
     embed
-      .setTitle(`A note was added for ${payload.username} successfully`)
+      .setTitle(`A note was added for ${payload.username}`)
       .addFields(
         { name: "Admin", value: payload.admin, inline: true },
         { name: "Date", value: formatDate(payload.timestamp), inline: true },
