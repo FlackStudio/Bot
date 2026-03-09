@@ -51,6 +51,7 @@ const COMMAND_PERMISSION = {
   note: "Notes",
   info: "Info",
   clearlogs: "ClearLogs",
+  purge: "Purge",
 };
 
 function parseRolePermissions(raw) {
@@ -515,6 +516,12 @@ const commands = [
     .setName("clearlogs")
     .setDescription("Clear all moderation logs for a Roblox player")
     .addStringOption((o) => o.setName("target").setDescription("Roblox username").setRequired(true)),
+  new SlashCommandBuilder()
+    .setName("purge")
+    .setDescription("Delete recent messages in this channel")
+    .addIntegerOption((o) =>
+      o.setName("amount").setDescription("How many messages to delete (1-100)").setRequired(true)
+    ),
 ].map((c) => c.toJSON());
 
 client.once("ready", async () => {
@@ -610,6 +617,20 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.reply({
         content: `Successfully cleared ${user.username}'s logs.`,
       });
+      return;
+    }
+
+    if (name === "purge") {
+      const amount = interaction.options.getInteger("amount", true);
+      const toDelete = Math.min(Math.max(amount, 1), 100);
+      const channel = interaction.channel;
+      if (!channel || !channel.isTextBased() || !("bulkDelete" in channel)) {
+        await interaction.reply({ content: "This command can only be used in a server text channel." });
+        return;
+      }
+
+      const deleted = await channel.bulkDelete(toDelete, true);
+      await interaction.reply({ content: `Deleted ${deleted.size} message(s).` });
       return;
     }
 
