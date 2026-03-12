@@ -667,6 +667,61 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
+    if (name === "unban") {
+      const banId = interaction.options.getString("ban_id", true);
+      const unbanReason = interaction.options.getString("reason", true);
+
+      const banRecord = store.records.find(
+        (r) => r.action === "ban" && String(r.caseId) === String(banId)
+      );
+
+      if (!banRecord) {
+        await interaction.reply({ content: `Ban ID ${banId} not found.` });
+        return;
+      }
+
+      banRecord.unbanned = {
+        reason: unbanReason,
+        adminDiscordTag: interaction.user.tag,
+        adminDiscordId: interaction.user.id,
+        timestamp: Date.now(),
+      };
+
+      if (banRecord.userId) {
+        delete store.bans[banRecord.userId];
+      }
+      saveData();
+
+      pushCommand(GAME_ID, {
+        type: "unban",
+        data: {
+          target: banRecord.userId,
+          userId: banRecord.userId,
+          username: banRecord.username,
+          reason: unbanReason,
+          adminDiscord: interaction.user.tag,
+          banId,
+        },
+      });
+
+      await sendLog("unban", {
+        username: banRecord.username,
+        userId: banRecord.userId,
+        reason: unbanReason,
+        admin: interaction.user.tag,
+        timestamp: Date.now(),
+        thumbnailUrl: null,
+      });
+
+      const success = new EmbedBuilder()
+        .setColor(COLORS.unban)
+        .setDescription(`${banRecord.username} was successfully unbanned`)
+        .setTimestamp(new Date());
+
+      await interaction.reply({ embeds: [success] });
+      return;
+    }
+
     const user = await resolveRobloxUser(targetRaw);
     const thumb = await getHeadshotUrl(user.userId);
     const reason = interaction.options.getString("reason", true);
@@ -728,61 +783,6 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.reply({
         embeds: [buildSuccessEmbed("ban", user.username), buildCaseIdEmbed("Ban", record.caseId)],
       });
-      return;
-    }
-
-    if (name === "unban") {
-      const banId = interaction.options.getString("ban_id", true);
-      const unbanReason = interaction.options.getString("reason", true);
-
-      const banRecord = store.records.find(
-        (r) => r.action === "ban" && String(r.caseId) === String(banId)
-      );
-
-      if (!banRecord) {
-        await interaction.reply({ content: `Ban ID ${banId} not found.` });
-        return;
-      }
-
-      banRecord.unbanned = {
-        reason: unbanReason,
-        adminDiscordTag: interaction.user.tag,
-        adminDiscordId: interaction.user.id,
-        timestamp: Date.now(),
-      };
-
-      if (banRecord.userId) {
-        delete store.bans[banRecord.userId];
-      }
-      saveData();
-
-      pushCommand(GAME_ID, {
-        type: "unban",
-        data: {
-          target: banRecord.userId,
-          userId: banRecord.userId,
-          username: banRecord.username,
-          reason: unbanReason,
-          adminDiscord: interaction.user.tag,
-          banId,
-        },
-      });
-
-      await sendLog("unban", {
-        username: banRecord.username,
-        userId: banRecord.userId,
-        reason: unbanReason,
-        admin: interaction.user.tag,
-        timestamp: Date.now(),
-        thumbnailUrl: thumb,
-      });
-
-      const success = new EmbedBuilder()
-        .setColor(COLORS.unban)
-        .setDescription(`${banRecord.username} was successfully unbanned`)
-        .setTimestamp(new Date());
-
-      await interaction.reply({ embeds: [success] });
       return;
     }
 
