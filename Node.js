@@ -335,7 +335,6 @@ function buildLogEmbed(action, payload) {
     .setTimestamp(new Date(payload.timestamp || Date.now()));
 
   if (payload.thumbnailUrl) embed.setThumbnail(payload.thumbnailUrl);
-  if (payload.caseId) embed.setFooter({ text: `Case ID: ${payload.caseId}` });
 
   if (action === "ban") {
     embed
