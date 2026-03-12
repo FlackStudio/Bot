@@ -230,14 +230,14 @@ function parseDuration(input) {
     return { ok: true, permanent: true, ms: null, pretty: "PERM" };
   }
 
-  const matches = text.match(/(\d+)\s*([ywdhm])/g);
+  const matches = text.match(/(\d+)\s*([ywdhms])/g);
   if (!matches) {
-    return { ok: false, error: "Invalid length. Example: `1d 5h`, `30m`, or `PERM`." };
+    return { ok: false, error: "Invalid length. Example: `1d 5h`, `30m`, `30s`, or `PERM`." };
   }
 
   let total = 0;
   for (const token of matches) {
-    const m = token.match(/(\d+)\s*([ywdhm])/);
+    const m = token.match(/(\d+)\s*([ywdhms])/);
     if (!m) continue;
     const value = Number(m[1]);
     const unit = m[2];
@@ -248,10 +248,11 @@ function parseDuration(input) {
     if (unit === "d") total += value * 24 * 60 * 60 * 1000;
     if (unit === "h") total += value * 60 * 60 * 1000;
     if (unit === "m") total += value * 60 * 1000;
+    if (unit === "s") total += value * 1000;
   }
 
   if (total <= 0) {
-    return { ok: false, error: "Invalid length. Example: `1d 5h`, `30m`, or `PERM`." };
+    return { ok: false, error: "Invalid length. Example: `1d 5h`, `30m`, `30s`, or `PERM`." };
   }
 
   return { ok: true, permanent: false, ms: total, pretty: text.toUpperCase() };
