@@ -435,6 +435,15 @@ function summarizeCases(records, action) {
         line += ` (${len})`;
       }
       if (r.reason) line += ` - ${r.reason}`;
+      if (action === "ban") {
+        const relatedUnban = store.records
+          .filter((x) => x.userId === r.userId && x.action === "unban" && x.timestamp >= r.timestamp)
+          .sort((a, b) => a.timestamp - b.timestamp)[0];
+        if (relatedUnban) {
+          const unbanReason = relatedUnban.reason || "No reason provided";
+          line += ` | Unbanned ${unbanReason}`;
+        }
+      }
       return line.length > 200 ? `${line.slice(0, 197)}...` : line;
     })
     .join("\n");
