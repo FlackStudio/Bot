@@ -454,14 +454,10 @@ function summarizeCases(records, action) {
         line += ` (${len})`;
       }
       if (r.reason) line += ` - ${r.reason}`;
-      if (action === "ban") {
-        const relatedUnban = store.records
-          .filter((x) => x.userId === r.userId && x.action === "unban" && x.timestamp >= r.timestamp)
-          .sort((a, b) => a.timestamp - b.timestamp)[0];
-        if (relatedUnban) {
-          const unbanReason = relatedUnban.reason || "No reason provided";
-          line += ` | Unbanned ${unbanReason}`;
-        }
+      if (action === "ban" && r.unbanned) {
+        const unbanReason = r.unbanned.reason || "No reason provided";
+        const unbanAdmin = r.unbanned.adminDiscordTag || (r.unbanned.adminDiscordId ? `<@${r.unbanned.adminDiscordId}>` : "Unknown");
+        line += ` | Unbanned ${unbanReason} (${unbanAdmin})`;
       }
       return line.length > 200 ? `${line.slice(0, 197)}...` : line;
     })
@@ -527,8 +523,8 @@ const commands = [
     .addStringOption((o) => o.setName("length").setDescription("Example: 1d 5h, 30m, PERM").setRequired(true)),
   new SlashCommandBuilder()
     .setName("unban")
-    .setDescription("Unban a Roblox player")
-    .addStringOption((o) => o.setName("target").setDescription("Roblox username or user ID").setRequired(true))
+    .setDescription("Unban a Roblox player by ban ID")
+    .addStringOption((o) => o.setName("ban_id").setDescription("Ban ID").setRequired(true))
     .addStringOption((o) => o.setName("reason").setDescription("Unban reason").setRequired(true)),
   new SlashCommandBuilder()
     .setName("kick")
@@ -736,53 +732,57 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     if (name === "unban") {
-      const activeBan = getActiveBan(user.userId);
-      if (!activeBan) {
-        await interaction.reply({
-          content: `${user.username} is not currently banned.`,
-        });
+      const banId = interaction.options.getString("ban_id", true);
+      const unbanReason = interaction.options.getString("reason", true);
+
+      const banRecord = store.records.find(
+        (r) => r.action === "ban" && String(r.caseId) === String(banId)
+      );
+
+      if (!banRecord) {
+        await interaction.reply({ content: `Ban ID ${banId} not found.` });
         return;
       }
 
-      const record = makeRecord("unban", user, interaction.user, reason);
-      delete store.bans[user.userId];
+      banRecord.unbanned = {
+        reason: unbanReason,
+        adminDiscordTag: interaction.user.tag,
+        adminDiscordId: interaction.user.id,
+        timestamp: Date.now(),
+      };
+
+      if (banRecord.userId) {
+        delete store.bans[banRecord.userId];
+      }
       saveData();
 
       pushCommand(GAME_ID, {
         type: "unban",
         data: {
-          target: user.userId,
-          userId: user.userId,
-          username: user.username,
-          reason,
+          target: banRecord.userId,
+          userId: banRecord.userId,
+          username: banRecord.username,
+          reason: unbanReason,
           adminDiscord: interaction.user.tag,
-          caseId: record.caseId,
+          banId,
         },
       });
 
       await sendLog("unban", {
-        caseId: record.caseId,
-        username: user.username,
-        userId: user.userId,
-        reason,
+        username: banRecord.username,
+        userId: banRecord.userId,
+        reason: unbanReason,
         admin: interaction.user.tag,
-        timestamp: record.timestamp,
+        timestamp: Date.now(),
         thumbnailUrl: thumb,
       });
 
-      await interaction.reply({
-        embeds: [
-          buildLogEmbed("unban", {
-            caseId: record.caseId,
-            username: user.username,
-            userId: user.userId,
-            reason,
-            admin: interaction.user.tag,
-            timestamp: record.timestamp,
-            thumbnailUrl: thumb,
-          }),
-        ],
-      });
+      const success = new EmbedBuilder()
+        .setColor(COLORS.unban)
+        .setDescription(`${banRecord.username} was successfully unbanned`)
+        .setTimestamp(new Date());
+
+      await interaction.reply({ embeds: [success] });
       return;
     }
 
