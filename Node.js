@@ -481,6 +481,14 @@ app.post("/presence/update", (req, res) => {
   return res.json({ ok: true, online: playerUserIds.length });
 });
 
+app.get("/", (_req, res) => {
+  res.json({ ok: true, service: "moderation-pro-bot" });
+});
+
+app.get("/health", (_req, res) => {
+  res.json({ ok: true, uptimeMs: process.uptime() * 1000 });
+});
+
 const commands = [
   new SlashCommandBuilder()
     .setName("ban")
