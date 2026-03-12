@@ -181,19 +181,28 @@ function loadData() {
     return {
       records: [],
       bans: {},
+      usedCaseIds: [],
     };
   }
   try {
     const raw = fs.readFileSync(DATA_FILE, "utf8");
     const parsed = JSON.parse(raw);
+    const recordIds = Array.isArray(parsed.records)
+      ? parsed.records.map((r) => String(r.caseId || "")).filter(Boolean)
+      : [];
+    const usedFromFile = Array.isArray(parsed.usedCaseIds)
+      ? parsed.usedCaseIds.map((x) => String(x || "")).filter(Boolean)
+      : [];
     return {
       records: Array.isArray(parsed.records) ? parsed.records : [],
       bans: parsed.bans && typeof parsed.bans === "object" ? parsed.bans : {},
+      usedCaseIds: Array.from(new Set([...usedFromFile, ...recordIds])),
     };
   } catch {
     return {
       records: [],
       bans: {},
+      usedCaseIds: [],
     };
   }
 }
@@ -208,7 +217,7 @@ function generateCaseId() {
   let id = "";
   do {
     id = String(Math.floor(10000 + Math.random() * 90000));
-  } while (store.records.some((r) => r.caseId === id));
+  } while ((store.usedCaseIds || []).includes(id));
   return id;
 }
 
@@ -391,6 +400,13 @@ function buildSuccessEmbed(action, username) {
     .setTimestamp(new Date());
 }
 
+function buildCaseIdEmbed(label, caseId) {
+  return new EmbedBuilder()
+    .setColor(COLORS.moderation)
+    .setDescription(`${label} ID: ${caseId}`)
+    .setTimestamp(new Date());
+}
+
 async function sendLog(action, payload) {
   const channelId = process.env.LOG_CHANNEL_ID;
   if (!channelId) return;
@@ -416,6 +432,10 @@ function makeRecord(action, user, admin, reason, extra = {}) {
     ...extra,
   };
   store.records.push(record);
+  store.usedCaseIds = store.usedCaseIds || [];
+  if (!store.usedCaseIds.includes(record.caseId)) {
+    store.usedCaseIds.push(record.caseId);
+  }
   saveData();
   return record;
 }
@@ -711,7 +731,7 @@ client.on("interactionCreate", async (interaction) => {
       });
 
       await interaction.reply({
-        embeds: [buildSuccessEmbed("ban", user.username)],
+        embeds: [buildSuccessEmbed("ban", user.username), buildCaseIdEmbed("Ban", record.caseId)],
       });
       return;
     }
@@ -800,7 +820,7 @@ client.on("interactionCreate", async (interaction) => {
       });
 
       await interaction.reply({
-        embeds: [buildSuccessEmbed("kick", user.username)],
+        embeds: [buildSuccessEmbed("kick", user.username), buildCaseIdEmbed("Kick", record.caseId)],
       });
       return;
     }
@@ -819,7 +839,7 @@ client.on("interactionCreate", async (interaction) => {
       });
 
       await interaction.reply({
-        embeds: [buildSuccessEmbed("warn", user.username)],
+        embeds: [buildSuccessEmbed("warn", user.username), buildCaseIdEmbed("Warn", record.caseId)],
       });
       return;
     }
